@@ -1,0 +1,68 @@
+# https://github.com/golangci/golangci-lint
+run:
+  timeout: 10s
+  tests: false
+
+linters-settings:
+  lll:
+    line-length: 140
+    tab-width: 4
+  funlen:
+    lines: 110
+    statements: 60
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+    settings:
+      rangeValCopy:
+        sizeThreshold: 128
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - errcheck
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - golint
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - misspell
+    - nakedret
+    - scopelint
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+    - gochecknoglobals
+    - godox
+    - maligned
+    - prealloc
+  fast: false
+
+# https://github.com/golangci/golangci/wiki/Configuration
+service:
+  golangci-lint-version: 1.23.8 # use the fixed version to not introduce new linters unexpectedly
