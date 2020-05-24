@@ -34,9 +34,10 @@ You can see more usage examples in tests.
 
 ## Supported geometry
 
-- POINT
-- MULTIPOINT
-- POLYGON
-- LINESTRING
-- CIRCULARSTRING
-- 
+* POINT
+* LINESTRING
+* POLYGON
+* MULTIPOINT
+* MULTILINESTRING
+* MULTIPOLYGON
+* CIRCULARSTRING
