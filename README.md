@@ -5,7 +5,7 @@ WKT parser is a library for parsing wkt geometry into simple structures, which i
 ## Install
 
 ```bash
-go get -u github.com/IvanZagoskin/wkt-parser
+go get -u github.com/IvanZagoskin/wkt
 ```
 
 ## Example
@@ -16,13 +16,13 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/IvanZagoskin/wkt"
+	"github.com/IvanZagoskin/wkt/parser"
 	"github.com/IvanZagoskin/wkt/geometry"
 )
 
 func main() {
-	parser := wkt.NewParser()
-	g, _ := parser.ParseWKT(bytes.NewReader([]byte("POINT (30 20)")))
+	p := parser.New()
+	g, _ := p.ParseWKT(bytes.NewReader([]byte("POINT (30 20)")))
 	switch geom := g.(type) {
 	case *geometry.Point:
 		fmt.Printf("%+v", geom)
@@ -34,6 +34,7 @@ You can see more usage examples in tests.
 
 ## Supported geometry
 
+Added support for basic geometry types:
 * POINT
 * LINESTRING
 * POLYGON
@@ -41,3 +42,4 @@ You can see more usage examples in tests.
 * MULTILINESTRING
 * MULTIPOLYGON
 * CIRCULARSTRING
+
