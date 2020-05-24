@@ -1,4 +1,4 @@
-package wkt
+package parser
 
 import (
 	"fmt"

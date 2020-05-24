@@ -1,4 +1,4 @@
-package wkt
+package parser
 
 import (
 	"fmt"
@@ -8,16 +8,16 @@ import (
 	"github.com/IvanZagoskin/wkt/text"
 )
 
-func (p *Parser) parseMultiPoint(ct geometry.CoordinateType) (*geometry.MultiPoint, error) {
+func (p *Parser) parseCircularString(ct geometry.CoordinateType) (*geometry.CircularString, error) {
 	switch ct {
-	case geometry.XY, geometry.XYM, geometry.XYZ, geometry.XYZM:
-		multiPoint := &geometry.MultiPoint{Type: ct}
+	case geometry.XY, geometry.XYZ, geometry.XYM, geometry.XYZM:
+		circularString := &geometry.CircularString{Type: ct}
 		for {
 			point, err := p.parsePoint(ct)
 			if err != nil {
-				return nil, fmt.Errorf("parseLineString: %w", err)
+				return nil, fmt.Errorf("parsePointCoords: %w", err)
 			}
-			multiPoint.Points = append(multiPoint.Points, point)
+			circularString.Points = append(circularString.Points, point)
 
 			if p.scanner.Scan() == scanner.EOF {
 				return nil, ErrUnexpectedEOF
@@ -25,7 +25,7 @@ func (p *Parser) parseMultiPoint(ct geometry.CoordinateType) (*geometry.MultiPoi
 
 			switch text.Token(p.scanner.TokenText()) {
 			case text.ClosingParenthesis:
-				return multiPoint, nil
+				return circularString, nil
 			case text.Comma:
 				continue
 			default:

@@ -1,4 +1,4 @@
-package wkt
+package parser
 
 import (
 	"fmt"
@@ -8,21 +8,16 @@ import (
 	"github.com/IvanZagoskin/wkt/text"
 )
 
-func (p *Parser) parsePolygon(ct geometry.CoordinateType) (*geometry.Polygon, error) {
+func (p *Parser) parseMultiPoint(ct geometry.CoordinateType) (*geometry.MultiPoint, error) {
 	switch ct {
 	case geometry.XY, geometry.XYM, geometry.XYZ, geometry.XYZM:
-		polygon := &geometry.Polygon{Type: ct, LineStrings: []*geometry.LineString{}}
+		multiPoint := &geometry.MultiPoint{Type: ct}
 		for {
-			// skip first text.OpeningParenthesis, because parseLineString is not waiting it
-			if err := p.skipTokenAndCheck(text.OpeningParenthesis); err != nil {
-				return nil, fmt.Errorf("skipTokenAndCheck: %w", err)
-			}
-
-			lineString, err := p.parseLineString(ct)
+			point, err := p.parsePoint(ct)
 			if err != nil {
 				return nil, fmt.Errorf("parseLineString: %w", err)
 			}
-			polygon.LineStrings = append(polygon.LineStrings, lineString)
+			multiPoint.Points = append(multiPoint.Points, point)
 
 			if p.scanner.Scan() == scanner.EOF {
 				return nil, ErrUnexpectedEOF
@@ -30,7 +25,7 @@ func (p *Parser) parsePolygon(ct geometry.CoordinateType) (*geometry.Polygon, er
 
 			switch text.Token(p.scanner.TokenText()) {
 			case text.ClosingParenthesis:
-				return polygon, nil
+				return multiPoint, nil
 			case text.Comma:
 				continue
 			default:

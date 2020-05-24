@@ -1,4 +1,4 @@
-package wkt_test
+package parser_test
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/IvanZagoskin/wkt"
 	"github.com/IvanZagoskin/wkt/geometry"
+	"github.com/IvanZagoskin/wkt/parser"
 )
 
 func TestWktParser_Point(t *testing.T) {
@@ -47,22 +47,22 @@ func TestWktParser_Point(t *testing.T) {
 		{
 			Name:  "Bad point",
 			Wkt:   []byte("POINT (30.2 20.7 34.777 63.23 63.23)"),
-			Error: wkt.ErrUnexpectedToken,
+			Error: parser.ErrUnexpectedToken,
 		},
 		{
 			Name:  "Bad wkt(1)",
 			Wkt:   []byte("POIN (30.2 20.7 34.777 63.23 63.23)"),
-			Error: wkt.ErrUnexpectedGeometryType,
+			Error: parser.ErrUnexpectedGeometryType,
 		},
 		{
 			Name:  "Bad wkt(2)",
 			Wkt:   []byte("POINT 30.2 20.7)"),
-			Error: wkt.ErrUnexpectedCoordinateType,
+			Error: parser.ErrUnexpectedCoordinateType,
 		},
 		{
 			Name:  "Bad wkt(3)",
 			Wkt:   []byte("POINt (30.2 20.7 34.777 63.23 63.23)"),
-			Error: wkt.ErrUnexpectedGeometryType,
+			Error: parser.ErrUnexpectedGeometryType,
 		},
 		{
 			Name:  "Bad wkt(4)",
@@ -76,7 +76,7 @@ func TestWktParser_Point(t *testing.T) {
 		},
 	}
 
-	wktParser := wkt.NewParser()
+	wktParser := parser.New()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
@@ -154,7 +154,7 @@ func TestWktParser_MultiPoint(t *testing.T) {
 		},
 	}
 
-	wktParser := wkt.NewParser()
+	wktParser := parser.New()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
@@ -248,7 +248,7 @@ func TestWktParser_LineString(t *testing.T) {
 		},
 	}
 
-	wktParser := wkt.NewParser()
+	wktParser := parser.New()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
@@ -266,6 +266,140 @@ func TestWktParser_LineString(t *testing.T) {
 			}
 
 			point := geom.(*geometry.LineString)
+			if diff := cmp.Diff(point, tc.Expected); diff != "" {
+				t.Fatal("\n-want +got\n", diff)
+			}
+		})
+	}
+}
+
+func TestWktParser_MultiLineString(t *testing.T) {
+	testCases := []struct {
+		Name     string
+		Wkt      []byte
+		Expected *geometry.MultiLineString
+		Error    error
+	}{
+		{
+			Name: "Simple MULTILINESTRING",
+			Wkt:  []byte("MULTILINESTRING ((30 10, 10 30, 40 40), (20 15, 11 31, 41 41))"),
+			Expected: &geometry.MultiLineString{
+				Lines: []*geometry.LineString{
+					{
+						Points: []*geometry.Point{
+							{X: 30, Y: 10, Type: geometry.XY},
+							{X: 10, Y: 30, Type: geometry.XY},
+							{X: 40, Y: 40, Type: geometry.XY},
+						},
+						Type: geometry.XY,
+					},
+					{
+						Points: []*geometry.Point{
+							{X: 20, Y: 15, Type: geometry.XY},
+							{X: 11, Y: 31, Type: geometry.XY},
+							{X: 41, Y: 41, Type: geometry.XY},
+						},
+						Type: geometry.XY,
+					},
+				},
+				Type: geometry.XY,
+			},
+		},
+		{
+			Name: "MULTILINESTRING Z",
+			Wkt:  []byte("MULTILINESTRING Z ((30 10 1, 10 30 2, 40 40 3), (20 15 4, 11 31 5, 41 41 6))"),
+			Expected: &geometry.MultiLineString{
+				Lines: []*geometry.LineString{
+					{
+						Points: []*geometry.Point{
+							{X: 30, Y: 10, Z: 1, Type: geometry.XYZ},
+							{X: 10, Y: 30, Z: 2, Type: geometry.XYZ},
+							{X: 40, Y: 40, Z: 3, Type: geometry.XYZ},
+						},
+						Type: geometry.XYZ,
+					},
+					{
+						Points: []*geometry.Point{
+							{X: 20, Y: 15, Z: 4, Type: geometry.XYZ},
+							{X: 11, Y: 31, Z: 5, Type: geometry.XYZ},
+							{X: 41, Y: 41, Z: 6, Type: geometry.XYZ},
+						},
+						Type: geometry.XYZ,
+					},
+				},
+				Type: geometry.XYZ,
+			},
+		},
+		{
+			Name: "MULTILINESTRING M",
+			Wkt:  []byte("MULTILINESTRING M ((30 10 1, 10 30 2, 40 40 3), (20 15 4, 11 31 5, 41 41 6))"),
+			Expected: &geometry.MultiLineString{
+				Lines: []*geometry.LineString{
+					{
+						Points: []*geometry.Point{
+							{X: 30, Y: 10, M: 1, Type: geometry.XYM},
+							{X: 10, Y: 30, M: 2, Type: geometry.XYM},
+							{X: 40, Y: 40, M: 3, Type: geometry.XYM},
+						},
+						Type: geometry.XYM,
+					},
+					{
+						Points: []*geometry.Point{
+							{X: 20, Y: 15, M: 4, Type: geometry.XYM},
+							{X: 11, Y: 31, M: 5, Type: geometry.XYM},
+							{X: 41, Y: 41, M: 6, Type: geometry.XYM},
+						},
+						Type: geometry.XYM,
+					},
+				},
+				Type: geometry.XYM,
+			},
+		},
+		{
+			Name: "MULTILINESTRING ZM",
+			Wkt:  []byte("MULTILINESTRING ZM ((30 10 1 6, 10 30 2 5, 40 40 3 4), (20 15 4 3, 11 31 5 2, 41 41 6 1))"),
+			Expected: &geometry.MultiLineString{
+				Lines: []*geometry.LineString{
+					{
+						Points: []*geometry.Point{
+							{X: 30, Y: 10, Z: 1, M: 6, Type: geometry.XYZM},
+							{X: 10, Y: 30, Z: 2, M: 5, Type: geometry.XYZM},
+							{X: 40, Y: 40, Z: 3, M: 4, Type: geometry.XYZM},
+						},
+						Type: geometry.XYZM,
+					},
+					{
+						Points: []*geometry.Point{
+							{X: 20, Y: 15, Z: 4, M: 3, Type: geometry.XYZM},
+							{X: 11, Y: 31, Z: 5, M: 2, Type: geometry.XYZM},
+							{X: 41, Y: 41, Z: 6, M: 1, Type: geometry.XYZM},
+						},
+						Type: geometry.XYZM,
+					},
+				},
+				Type: geometry.XYZM,
+			},
+		},
+	}
+
+	wktParser := parser.New()
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			geom, err := wktParser.ParseWKT(bytes.NewReader(tc.Wkt))
+			if tc.Error != nil {
+				if !errors.Is(err, tc.Error) {
+					t.Fatalf("\ngot: %v\nexpected error: %s\n", err, tc.Error)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("\nunexpected error:%v\n\n", err)
+				return
+			}
+
+			point := geom.(*geometry.MultiLineString)
 			if diff := cmp.Diff(point, tc.Expected); diff != "" {
 				t.Fatal("\n-want +got\n", diff)
 			}
@@ -342,7 +476,7 @@ func TestWktParser_CircularString(t *testing.T) {
 		},
 	}
 
-	wktParser := wkt.NewParser()
+	wktParser := parser.New()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
@@ -480,7 +614,7 @@ func TestWktParser_Polygon(t *testing.T) {
 		},
 	}
 
-	wktParser := wkt.NewParser()
+	wktParser := parser.New()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {

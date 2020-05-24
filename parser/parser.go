@@ -1,4 +1,4 @@
-package wkt
+package parser
 
 import (
 	"errors"
@@ -24,8 +24,8 @@ type Parser struct {
 	scanner *scanner.Scanner
 }
 
-// NewParser returns Parser
-func NewParser() *Parser {
+// New returns Parser
+func New() *Parser {
 	return &Parser{scanner: &scanner.Scanner{}}
 }
 
@@ -111,6 +111,23 @@ func (p *Parser) ParseWKT(r io.Reader) (geometry.Geometry, error) {
 
 		return circularString, nil
 
+	case geometry.MultiLineStringGT:
+		ct, err := p.detectCoordType()
+		if err != nil {
+			return nil, fmt.Errorf("detect coordinate type: %w", err)
+		}
+
+		if ct == geometry.Empty {
+			return &geometry.Point{Type: geometry.Empty}, nil
+		}
+
+		multiLineString, err := p.parseMultiLineString(ct)
+		if err != nil {
+			return nil, fmt.Errorf("parse linestring: %w", err)
+		}
+
+		return multiLineString, nil
+
 	case geometry.PolygonGT:
 		ct, err := p.detectCoordType()
 		if err != nil {
@@ -147,6 +164,9 @@ func (p *Parser) detectGeomType() (geometry.Type, error) {
 
 	case text.CIRCULARSTRING:
 		return geometry.CircularStringGT, nil
+
+	case text.MULTILINESTRING:
+		return geometry.MultiLineStringGT, nil
 
 	case text.POLYGON:
 		return geometry.PolygonGT, nil

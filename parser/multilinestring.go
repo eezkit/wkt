@@ -1,4 +1,4 @@
-package wkt
+package parser
 
 import (
 	"fmt"
@@ -8,16 +8,21 @@ import (
 	"github.com/IvanZagoskin/wkt/text"
 )
 
-func (p *Parser) parseLineString(ct geometry.CoordinateType) (*geometry.LineString, error) {
+func (p *Parser) parseMultiLineString(ct geometry.CoordinateType) (*geometry.MultiLineString, error) {
 	switch ct {
 	case geometry.XY, geometry.XYM, geometry.XYZ, geometry.XYZM:
-		lineString := &geometry.LineString{Type: ct}
+		multiLineString := &geometry.MultiLineString{Type: ct}
 		for {
-			point, err := p.parsePoint(ct)
-			if err != nil {
-				return nil, fmt.Errorf("parsePointCoords: %w", err)
+			// skip first text.OpeningParenthesis, because parseLineString is not waiting it
+			if err := p.skipTokenAndCheck(text.OpeningParenthesis); err != nil {
+				return nil, fmt.Errorf("skipTokenAndCheck: %w", err)
 			}
-			lineString.Points = append(lineString.Points, point)
+
+			lineString, err := p.parseLineString(ct)
+			if err != nil {
+				return nil, fmt.Errorf("parseLineString: %w", err)
+			}
+			multiLineString.Lines = append(multiLineString.Lines, lineString)
 
 			if p.scanner.Scan() == scanner.EOF {
 				return nil, ErrUnexpectedEOF
@@ -25,7 +30,7 @@ func (p *Parser) parseLineString(ct geometry.CoordinateType) (*geometry.LineStri
 
 			switch text.Token(p.scanner.TokenText()) {
 			case text.ClosingParenthesis:
-				return lineString, nil
+				return multiLineString, nil
 			case text.Comma:
 				continue
 			default:

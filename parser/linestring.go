@@ -1,4 +1,4 @@
-package wkt
+package parser
 
 import (
 	"fmt"
@@ -8,16 +8,16 @@ import (
 	"github.com/IvanZagoskin/wkt/text"
 )
 
-func (p *Parser) parseCircularString(ct geometry.CoordinateType) (*geometry.CircularString, error) {
+func (p *Parser) parseLineString(ct geometry.CoordinateType) (*geometry.LineString, error) {
 	switch ct {
-	case geometry.XY, geometry.XYZ, geometry.XYM, geometry.XYZM:
-		circularString := &geometry.CircularString{Type: ct}
+	case geometry.XY, geometry.XYM, geometry.XYZ, geometry.XYZM:
+		lineString := &geometry.LineString{Type: ct}
 		for {
 			point, err := p.parsePoint(ct)
 			if err != nil {
 				return nil, fmt.Errorf("parsePointCoords: %w", err)
 			}
-			circularString.Points = append(circularString.Points, point)
+			lineString.Points = append(lineString.Points, point)
 
 			if p.scanner.Scan() == scanner.EOF {
 				return nil, ErrUnexpectedEOF
@@ -25,7 +25,7 @@ func (p *Parser) parseCircularString(ct geometry.CoordinateType) (*geometry.Circ
 
 			switch text.Token(p.scanner.TokenText()) {
 			case text.ClosingParenthesis:
-				return circularString, nil
+				return lineString, nil
 			case text.Comma:
 				continue
 			default:

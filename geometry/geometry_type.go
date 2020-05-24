@@ -11,6 +11,7 @@ const (
 
 	LineStringGT
 	CircularStringGT
+	MultiLineStringGT
 
 	PolygonGT
 )
