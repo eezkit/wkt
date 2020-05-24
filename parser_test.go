@@ -101,6 +101,84 @@ func TestWktParser_Point(t *testing.T) {
 	}
 }
 
+func TestWktParser_MultiPoint(t *testing.T) {
+	testCases := []struct {
+		Name     string
+		Wkt      []byte
+		Expected *geometry.MultiPoint
+		Error    error
+	}{
+		{
+			Name: "Simple MULTIPOINT",
+			Wkt:  []byte("MULTIPOINT (30 20, 40 50)"),
+			Expected: &geometry.MultiPoint{
+				Points: []*geometry.Point{
+					{X: 30, Y: 20, Type: geometry.XY},
+					{X: 40, Y: 50, Type: geometry.XY},
+				},
+				Type: geometry.XY,
+			},
+		},
+		{
+			Name: "MULTIPOINT Z",
+			Wkt:  []byte("MULTIPOINT Z (30.2 20.7 34.777, 10.2 50.7 64.777)"),
+			Expected: &geometry.MultiPoint{
+				Points: []*geometry.Point{
+					{X: 30.2, Y: 20.7, Z: 34.777, Type: geometry.XYZ},
+					{X: 10.2, Y: 50.7, Z: 64.777, Type: geometry.XYZ},
+				},
+				Type: geometry.XYZ,
+			},
+		},
+		{
+			Name: "MULTIPOINT M",
+			Wkt:  []byte("MULTIPOINT M (30.2 20.7 34.777, 10.2 50.7 64.777)"),
+			Expected: &geometry.MultiPoint{
+				Points: []*geometry.Point{
+					{X: 30.2, Y: 20.7, M: 34.777, Type: geometry.XYM},
+					{X: 10.2, Y: 50.7, M: 64.777, Type: geometry.XYM},
+				},
+				Type: geometry.XYM,
+			},
+		},
+		{
+			Name: "MULTIPOINT ZM",
+			Wkt:  []byte("MULTIPOINT ZM (30.2 20.7 34.777 33.33, 10.2 50.7 64.777 33.33)"),
+			Expected: &geometry.MultiPoint{
+				Points: []*geometry.Point{
+					{X: 30.2, Y: 20.7, Z: 34.777, M: 33.33, Type: geometry.XYZM},
+					{X: 10.2, Y: 50.7, Z: 64.777, M: 33.33, Type: geometry.XYZM},
+				},
+				Type: geometry.XYZM,
+			},
+		},
+	}
+
+	wktParser := wkt.NewParser()
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			geom, err := wktParser.ParseWKT(bytes.NewReader(tc.Wkt))
+			if tc.Error != nil {
+				if !errors.Is(err, tc.Error) {
+					t.Fatalf("\ngot: %v\nexpected error: %s\n", err, tc.Error)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("\nunexpected error:%v\n\n", err)
+				return
+			}
+
+			point := geom.(*geometry.MultiPoint)
+			if diff := cmp.Diff(point, tc.Expected); diff != "" {
+				t.Fatal("\n-want +got\n", diff)
+			}
+		})
+	}
+}
+
 func TestWktParser_LineString(t *testing.T) {
 	testCases := []struct {
 		Name     string
@@ -310,6 +388,34 @@ func TestWktParser_Polygon(t *testing.T) {
 							{X: 20, Y: 40, Type: geometry.XY},
 							{X: 10, Y: 20, Type: geometry.XY},
 							{X: 30, Y: 10, Type: geometry.XY},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "Hole polygon",
+			Wkt:  []byte("POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))"),
+			Expected: &geometry.Polygon{
+				Type: geometry.XY,
+				LineStrings: []*geometry.LineString{
+					{
+						Type: geometry.XY,
+						Points: []*geometry.Point{
+							{X: 35, Y: 10, Type: geometry.XY},
+							{X: 45, Y: 45, Type: geometry.XY},
+							{X: 15, Y: 40, Type: geometry.XY},
+							{X: 10, Y: 20, Type: geometry.XY},
+							{X: 35, Y: 10, Type: geometry.XY},
+						},
+					},
+					{
+						Type: geometry.XY,
+						Points: []*geometry.Point{
+							{X: 20, Y: 30, Type: geometry.XY},
+							{X: 35, Y: 35, Type: geometry.XY},
+							{X: 30, Y: 20, Type: geometry.XY},
+							{X: 20, Y: 30, Type: geometry.XY},
 						},
 					},
 				},

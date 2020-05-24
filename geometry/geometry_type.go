@@ -5,7 +5,9 @@ type Type uint8
 
 const (
 	UndefinedGT Type = 0 + iota
+
 	PointGT
+	MultyPointGT
 
 	LineStringGT
 	CircularStringGT

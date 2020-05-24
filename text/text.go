@@ -4,7 +4,8 @@ package text
 type Token string
 
 const (
-	POINT Token = "POINT"
+	POINT      Token = "POINT"
+	MULTIPOINT Token = "MULTIPOINT"
 
 	LINESTRING     Token = "LINESTRING"
 	CIRCULARSTRING Token = "CIRCULARSTRING"

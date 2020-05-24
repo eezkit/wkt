@@ -41,6 +41,6 @@ func (p *Parser) parsePoint(ct geometry.CoordinateType) (*geometry.Point, error)
 		return &geometry.Point{Type: geometry.XYZM, X: coords[0], Y: coords[1], Z: coords[2], M: coords[3]}, nil
 
 	default:
-		return nil, fmt.Errorf("%w: %scanner", ErrUnexpectedToken, p.scanner.TokenText())
+		return nil, fmt.Errorf("%w: %d", ErrUnexpectedCoordinateType, ct)
 	}
 }
