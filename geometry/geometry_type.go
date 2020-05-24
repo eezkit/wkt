@@ -14,4 +14,5 @@ const (
 	MultiLineStringGT
 
 	PolygonGT
+	MultiPolygonGT
 )

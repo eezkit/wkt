@@ -11,7 +11,8 @@ const (
 	CIRCULARSTRING  Token = "CIRCULARSTRING"
 	MULTILINESTRING Token = "MULTILINESTRING"
 
-	POLYGON Token = "POLYGON"
+	POLYGON      Token = "POLYGON"
+	MULTIPOLYGON Token = "MULTIPOLYGON"
 
 	OpeningParenthesis Token = "("
 	ClosingParenthesis Token = ")"

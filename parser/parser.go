@@ -145,6 +145,23 @@ func (p *Parser) ParseWKT(r io.Reader) (geometry.Geometry, error) {
 
 		return polygon, nil
 
+	case geometry.MultiPolygonGT:
+		ct, err := p.detectCoordType()
+		if err != nil {
+			return nil, fmt.Errorf("detect coordinate type: %w", err)
+		}
+
+		if ct == geometry.Empty {
+			return &geometry.Point{Type: geometry.Empty}, nil
+		}
+
+		multiPolygon, err := p.parseMultiPolygon(ct)
+		if err != nil {
+			return nil, fmt.Errorf("parse polygon: %w", err)
+		}
+
+		return multiPolygon, nil
+
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrUnexpectedGeometryType, p.scanner.TokenText())
 	}
@@ -159,6 +176,9 @@ func (p *Parser) detectGeomType() (geometry.Type, error) {
 	case text.POINT:
 		return geometry.PointGT, nil
 
+	case text.MULTIPOINT:
+		return geometry.MultyPointGT, nil
+
 	case text.LINESTRING:
 		return geometry.LineStringGT, nil
 
@@ -171,8 +191,8 @@ func (p *Parser) detectGeomType() (geometry.Type, error) {
 	case text.POLYGON:
 		return geometry.PolygonGT, nil
 
-	case text.MULTIPOINT:
-		return geometry.MultyPointGT, nil
+	case text.MULTIPOLYGON:
+		return geometry.MultiPolygonGT, nil
 
 	default:
 		return geometry.UndefinedGT, fmt.Errorf("%w: %s", ErrUnexpectedGeometryType, p.scanner.TokenText())

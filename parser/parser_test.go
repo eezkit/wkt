@@ -638,3 +638,95 @@ func TestWktParser_Polygon(t *testing.T) {
 		})
 	}
 }
+
+func TestWktParser_MultiPolygon(t *testing.T) {
+	testCases := []struct {
+		Name     string
+		Wkt      []byte
+		Expected *geometry.MultiPolygon
+		Error    error
+	}{
+		{
+			Name: "Simple MULTIPOLYGON",
+			Wkt: []byte(`
+MULTIPOLYGON 
+(
+  (
+    (40 40, 20 45, 45 30, 40 40)
+  ), 
+  (
+    (20 35, 10 30, 10 10, 30 5, 45 20, 20 35), 
+    (30 20, 20 15, 20 25, 30 20)
+   )
+)`),
+			Expected: &geometry.MultiPolygon{
+				Polygons: []*geometry.Polygon{
+					{
+						Type: geometry.XY,
+						LineStrings: []*geometry.LineString{
+							{
+								Type: geometry.XY,
+								Points: []*geometry.Point{
+									{X: 40, Y: 40, Type: geometry.XY},
+									{X: 20, Y: 45, Type: geometry.XY},
+									{X: 45, Y: 30, Type: geometry.XY},
+									{X: 40, Y: 40, Type: geometry.XY},
+								},
+							},
+						},
+					},
+					{
+						Type: geometry.XY,
+						LineStrings: []*geometry.LineString{
+							{
+								Type: geometry.XY,
+								Points: []*geometry.Point{
+									{X: 20, Y: 35, Type: geometry.XY},
+									{X: 10, Y: 30, Type: geometry.XY},
+									{X: 10, Y: 10, Type: geometry.XY},
+									{X: 30, Y: 5, Type: geometry.XY},
+									{X: 45, Y: 20, Type: geometry.XY},
+									{X: 20, Y: 35, Type: geometry.XY},
+								},
+							},
+							{
+								Type: geometry.XY,
+								Points: []*geometry.Point{
+									{X: 30, Y: 20, Type: geometry.XY},
+									{X: 20, Y: 15, Type: geometry.XY},
+									{X: 20, Y: 25, Type: geometry.XY},
+									{X: 30, Y: 20, Type: geometry.XY},
+								},
+							},
+						},
+					},
+				},
+				Type: geometry.XY,
+			},
+		},
+	}
+
+	wktParser := parser.New()
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			geom, err := wktParser.ParseWKT(bytes.NewReader(tc.Wkt))
+			if tc.Error != nil {
+				if !errors.Is(err, tc.Error) {
+					t.Fatalf("\ngot: %v\nexpected error: %s\n", err, tc.Error)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("\nunexpected error:%v\n\n", err)
+				return
+			}
+
+			point := geom.(*geometry.MultiPolygon)
+			if diff := cmp.Diff(point, tc.Expected); diff != "" {
+				t.Fatal("\n-want +got\n", diff)
+			}
+		})
+	}
+}
